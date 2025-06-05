@@ -868,7 +868,7 @@ def publish_story(
 
 
 def unpublish_story(
-    topic_id: str, story_id: str, committer_id: str
+    topic_id: str, story_id: str, committer_id: str, is_permanent: bool
 ) -> None:
     """Marks the given story as unpublished.
 
@@ -876,6 +876,7 @@ def unpublish_story(
         topic_id: str. The id of the topic.
         story_id: str. The id of the given story.
         committer_id: str. ID of the committer.
+        is_permanent: bool. Unpublish temporarily or permanently.
 
     Raises:
         Exception. The given story does not exist.
@@ -927,10 +928,11 @@ def unpublish_story(
     generate_topic_summary(topic.id)
 
     # Delete corresponding exploration opportunities and reject associated
-    # translation suggestions.
-    exp_ids = story.story_contents.get_all_linked_exp_ids()
-    opportunity_services.delete_exploration_opportunities(exp_ids)
-    suggestion_services.auto_reject_translation_suggestions_for_exp_ids(exp_ids)
+    # translation suggestions in case the unpublish is permanent.
+    if is_permanent:
+        exp_ids = story.story_contents.get_all_linked_exp_ids()
+        opportunity_services.delete_exploration_opportunities(exp_ids)
+        suggestion_services.auto_reject_translation_suggestions_for_exp_ids(exp_ids)
 
 
 def delete_canonical_story(

@@ -260,16 +260,20 @@ export class StoryEditorNavbarComponent implements OnInit {
   }
 
   publishStory(): void {
-    this.storyEditorStateService.changeStoryPublicationStatus(true, () => {
-      this.storyIsPublished = this.storyEditorStateService.isStoryPublished();
-    });
+    this.storyEditorStateService.changeStoryPublicationStatus(
+      true,
+      () => {
+        this.storyIsPublished = this.storyEditorStateService.isStoryPublished();
+      },
+      false
+    );
   }
 
   unpublishStory(): void {
     this.ngbModal
       .open(StoryEditorUnpublishModalComponent, {backdrop: 'static'})
       .result.then(
-        () => {
+        (isPermanent: boolean) => {
           this.storyEditorStateService.changeStoryPublicationStatus(
             false,
             () => {
@@ -277,7 +281,8 @@ export class StoryEditorNavbarComponent implements OnInit {
                 this.storyEditorStateService.isStoryPublished();
               this.forceValidateExplorations = true;
               this._validateStory();
-            }
+            },
+            isPermanent
           );
         },
         () => {

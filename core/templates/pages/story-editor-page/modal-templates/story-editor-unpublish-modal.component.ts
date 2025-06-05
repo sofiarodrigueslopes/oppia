@@ -40,8 +40,10 @@ export class StoryEditorUnpublishModalComponent {
 
   selectedReasonText: string = this.badContentReasonText;
   unpublishingReason: string = 'BAD_CONTENT';
+  unpublishingType: 'temporary' | 'permanent' | null = null;
 
   cancel(): void {
+    this.selectUnpublishType(null);
     this.activeModal.dismiss();
   }
 
@@ -49,7 +51,7 @@ export class StoryEditorUnpublishModalComponent {
     if (this.isSerialChapterFeatureFlagEnabled()) {
       this.activeModal.close(this.unpublishingReason);
     } else {
-      this.activeModal.close();
+      this.activeModal.close(this.isPermanentUnpublishing());
     }
   }
 
@@ -65,5 +67,17 @@ export class StoryEditorUnpublishModalComponent {
     } else if (reason === 'CHAPTER_NEEDS_SPLITTING') {
       this.selectedReasonText = this.splitChapterReasonText;
     }
+  }
+
+  isTemporaryUnpublishing(): boolean {
+    return this.unpublishingType == 'temporary';
+  }
+
+  isPermanentUnpublishing(): boolean {
+    return this.unpublishingType == 'permanent';
+  }
+
+  selectUnpublishType(type: 'temporary' | 'permanent' | null): void {
+    this.unpublishingType = type;
   }
 }

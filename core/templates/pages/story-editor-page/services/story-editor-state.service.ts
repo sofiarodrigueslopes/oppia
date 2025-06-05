@@ -276,7 +276,8 @@ export class StoryEditorStateService {
 
   changeStoryPublicationStatus(
     newStoryStatusIsPublic: boolean,
-    successCallback: (value?: Object) => void
+    successCallback: (value?: Object) => void,
+    isPermanent: boolean = false
   ): boolean {
     const storyId = this._story.getId();
     if (!storyId || !this._storyIsInitialized) {
@@ -286,7 +287,11 @@ export class StoryEditorStateService {
       return false;
     }
     this.editableStoryBackendApiService
-      .changeStoryPublicationStatusAsync(storyId, newStoryStatusIsPublic)
+      .changeStoryPublicationStatusAsync(
+        storyId,
+        newStoryStatusIsPublic,
+        isPermanent
+      )
       .then(
         storyBackendObject => {
           this._setStoryPublicationStatus(newStoryStatusIsPublic);

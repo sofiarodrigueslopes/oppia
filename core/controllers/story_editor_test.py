@@ -62,7 +62,7 @@ class StoryPublicationTests(BaseStoryEditorControllerTests):
         self.put_json(
             '%s/%s' % (
                 feconf.STORY_PUBLISH_HANDLER, new_story_id),
-            {'new_story_status_is_public': True},
+            {'new_story_status_is_public': True, 'is_permanent': False},
             csrf_token=csrf_token, expected_status_int=404)
 
         # Raises error 404 even when story is saved as the new story id is not
@@ -73,8 +73,8 @@ class StoryPublicationTests(BaseStoryEditorControllerTests):
         self.put_json(
             '%s/%s' % (
                 feconf.STORY_PUBLISH_HANDLER, new_story_id),
-            {'new_story_status_is_public': True}, csrf_token=csrf_token,
-            expected_status_int=404)
+            {'new_story_status_is_public': True, 'is_permanent': True},
+            csrf_token=csrf_token, expected_status_int=404)
 
         self.logout()
 
@@ -87,7 +87,7 @@ class StoryPublicationTests(BaseStoryEditorControllerTests):
         self.put_json(
             '%s/%s' % (
                 feconf.STORY_PUBLISH_HANDLER, self.story_id),
-            {'new_story_status_is_public': 'Invalid value'},
+            {'new_story_status_is_public': 'Invalid value', 'is_permanent': False },
             csrf_token=csrf_token, expected_status_int=400)
 
         self.logout()
@@ -100,7 +100,8 @@ class StoryPublicationTests(BaseStoryEditorControllerTests):
         self.put_json(
             '%s/%s' % (
                 feconf.STORY_PUBLISH_HANDLER, self.story_id),
-            {'new_story_status_is_public': True}, csrf_token=csrf_token)
+            {'new_story_status_is_public': True, 'is_permanent': False},
+            csrf_token=csrf_token)
 
         topic = topic_fetchers.get_topic_by_id(self.topic_id)
         for reference in topic.canonical_story_references:
@@ -110,7 +111,8 @@ class StoryPublicationTests(BaseStoryEditorControllerTests):
         self.put_json(
             '%s/%s' % (
                 feconf.STORY_PUBLISH_HANDLER, self.story_id),
-            {'new_story_status_is_public': False}, csrf_token=csrf_token)
+            {'new_story_status_is_public': False, 'is_permanent': True},
+            csrf_token=csrf_token)
 
         topic = topic_fetchers.get_topic_by_id(self.topic_id)
         for reference in topic.canonical_story_references:
@@ -123,7 +125,8 @@ class StoryPublicationTests(BaseStoryEditorControllerTests):
         self.put_json(
             '%s/%s' % (
                 feconf.STORY_PUBLISH_HANDLER, self.story_id),
-            {'new_story_status_is_public': True}, csrf_token=csrf_token,
+            {'new_story_status_is_public': True, 'is_permanent': False},
+            csrf_token=csrf_token,
             expected_status_int=401)
 
 

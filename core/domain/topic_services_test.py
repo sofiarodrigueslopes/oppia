@@ -41,6 +41,7 @@ from core.domain import topic_fetchers
 from core.domain import topic_services
 from core.domain import translation_domain
 from core.domain import user_services
+from core.domain import opportunity_services
 from core.platform import models
 from core.tests import test_utils
 
@@ -67,6 +68,8 @@ class TopicServicesUnitTests(test_utils.GenericTestBase):
     skill_id_1: str = 'skill_1'
     skill_id_2: str = 'skill_2'
     skill_id_3: str = 'skill_3'
+    permanently: bool = True
+    temporarily: bool = False
 
     def setUp(self) -> None:
         self.test_list: List[str] = []
@@ -369,7 +372,7 @@ class TopicServicesUnitTests(test_utils.GenericTestBase):
                 self.story_id_1: []
             })
 
-    def test_generate_topic_summary_when_unpublishing_story(self) -> None:
+    def test_generate_topic_summary_when_unpublishing_story_permanently(self) -> None:
         topic_services.publish_story(
             self.TOPIC_ID, self.story_id_1, self.user_id_admin)
 
@@ -379,7 +382,7 @@ class TopicServicesUnitTests(test_utils.GenericTestBase):
             expected_args=[(self.TOPIC_ID,)]
         ):
             topic_services.unpublish_story(
-                self.TOPIC_ID, self.story_id_1, self.user_id_admin)
+                self.TOPIC_ID, self.story_id_1, self.user_id_admin, self.permanently)
 
         topic_summary = topic_fetchers.get_topic_summary_by_id(self.TOPIC_ID)
         self.assertEqual(topic_summary.id, self.TOPIC_ID)
@@ -961,7 +964,7 @@ class TopicServicesUnitTests(test_utils.GenericTestBase):
                 'new_value': 'New Description'
             })
 
-    def test_publish_and_unpublish_story(self) -> None:
+    def test_publish_and_unpublish_story_permanently(self) -> None:
         topic = topic_fetchers.get_topic_by_id(self.TOPIC_ID)
         self.assertEqual(
             topic.canonical_story_references[0].story_is_published, False)
@@ -989,13 +992,70 @@ class TopicServicesUnitTests(test_utils.GenericTestBase):
         self.assertEqual(topic_summary.additional_story_count, 1)
 
         with self.swap_with_call_counter(
+                topic_services, 'generate_topic_summary') as generate_topic_summary, \
+                self.swap_with_call_counter(
+                opportunity_services, 'delete_exploration_opportunities') as delete_opportunities_counter, \
+                self.swap_with_call_counter(
+                suggestion_services, 'auto_reject_translation_suggestions_for_exp_ids') as reject_suggestions_counter:
+            topic_services.unpublish_story(
+                self.TOPIC_ID, self.story_id_1, self.user_id_admin, self.permanently)
+            self.assertGreaterEqual(generate_topic_summary.times_called, 1)
+            self.assertEqual(delete_opportunities_counter.times_called, 1)
+            self.assertEqual(reject_suggestions_counter.times_called, 1)
+        topic_services.unpublish_story(
+            self.TOPIC_ID, self.story_id_3, self.user_id_admin, self.permanently)
+
+        topic = topic_fetchers.get_topic_by_id(self.TOPIC_ID)
+        topic_summary = topic_fetchers.get_topic_summary_by_id(self.TOPIC_ID)
+        # Ruling out the possibility of None for mypy type checking.
+        assert topic_summary is not None
+        self.assertEqual(
+            topic.canonical_story_references[0].story_is_published, False)
+        self.assertEqual(
+            topic.additional_story_references[0].story_is_published, False)
+        self.assertEqual(topic_summary.canonical_story_count, 0)
+        self.assertEqual(topic_summary.additional_story_count, 0)
+
+    def test_publish_and_unpublish_story_temporarily(self) -> None:
+        topic = topic_fetchers.get_topic_by_id(self.TOPIC_ID)
+        self.assertEqual(
+            topic.canonical_story_references[0].story_is_published, False)
+        self.assertEqual(
+            topic.additional_story_references[0].story_is_published, False)
+
+        with self.swap_with_call_counter(
                 topic_services, 'generate_topic_summary') as (
                 generate_topic_summary):
-            topic_services.unpublish_story(
+            topic_services.publish_story(
                 self.TOPIC_ID, self.story_id_1, self.user_id_admin)
             self.assertGreaterEqual(generate_topic_summary.times_called, 1)
-        topic_services.unpublish_story(
+        topic_services.publish_story(
             self.TOPIC_ID, self.story_id_3, self.user_id_admin)
+
+        topic = topic_fetchers.get_topic_by_id(self.TOPIC_ID)
+        topic_summary = topic_fetchers.get_topic_summary_by_id(self.TOPIC_ID)
+        # Ruling out the possibility of None for mypy type checking.
+        assert topic_summary is not None
+        self.assertEqual(
+            topic.canonical_story_references[0].story_is_published, True)
+        self.assertEqual(
+            topic.additional_story_references[0].story_is_published, True)
+        self.assertEqual(topic_summary.canonical_story_count, 1)
+        self.assertEqual(topic_summary.additional_story_count, 1)
+
+        with self.swap_with_call_counter(
+                topic_services, 'generate_topic_summary') as generate_topic_summary, \
+                self.swap_with_call_counter(
+                opportunity_services, 'delete_exploration_opportunities') as delete_opportunities_counter, \
+                self.swap_with_call_counter(
+                suggestion_services, 'auto_reject_translation_suggestions_for_exp_ids') as reject_suggestions_counter:
+            topic_services.unpublish_story(
+                self.TOPIC_ID, self.story_id_1, self.user_id_admin, self.temporarily)
+            self.assertGreaterEqual(generate_topic_summary.times_called, 1)
+            self.assertEqual(delete_opportunities_counter.times_called, 0)
+            self.assertEqual(reject_suggestions_counter.times_called, 0)
+        topic_services.unpublish_story(
+            self.TOPIC_ID, self.story_id_3, self.user_id_admin, self.temporarily)
 
         topic = topic_fetchers.get_topic_by_id(self.TOPIC_ID)
         topic_summary = topic_fetchers.get_topic_summary_by_id(self.TOPIC_ID)
@@ -1021,7 +1081,7 @@ class TopicServicesUnitTests(test_utils.GenericTestBase):
             'A topic with the given ID doesn\'t exist'
         ):
             topic_services.unpublish_story(
-                'invalid_topic', 'story_id_new', self.user_id_admin)
+                'invalid_topic', 'story_id_new', self.user_id_admin, self.permanently)
 
         with self.assertRaisesRegex(
             Exception,
@@ -1035,7 +1095,7 @@ class TopicServicesUnitTests(test_utils.GenericTestBase):
             'The user does not have enough rights to unpublish the story.'
         ):
             topic_services.unpublish_story(
-                self.TOPIC_ID, self.story_id_3, self.user_id_b)
+                self.TOPIC_ID, self.story_id_3, self.user_id_b, self.permanently)
 
         with self.assertRaisesRegex(
             Exception, 'A story with the given ID doesn\'t exist'):
@@ -1045,7 +1105,7 @@ class TopicServicesUnitTests(test_utils.GenericTestBase):
         with self.assertRaisesRegex(
             Exception, 'A story with the given ID doesn\'t exist'):
             topic_services.unpublish_story(
-                self.TOPIC_ID, 'invalid_story', self.user_id_admin)
+                self.TOPIC_ID, 'invalid_story', self.user_id_admin, self.permanently)
 
         self.save_new_story(
             'story_10',
@@ -1062,7 +1122,7 @@ class TopicServicesUnitTests(test_utils.GenericTestBase):
         with self.assertRaisesRegex(
             Exception, 'Story with given id doesn\'t exist in the topic'):
             topic_services.unpublish_story(
-                self.TOPIC_ID, 'story_10', self.user_id_admin)
+                self.TOPIC_ID, 'story_10', self.user_id_admin, self.permanently)
 
         # Throw error if a story node doesn't have an exploration.
         self.save_new_story(

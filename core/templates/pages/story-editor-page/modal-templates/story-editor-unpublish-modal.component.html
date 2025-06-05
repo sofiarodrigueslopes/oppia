@@ -77,25 +77,74 @@
 </div>
 
 <div *ngIf="!isSerialChapterFeatureFlagEnabled()">
-  <div class="modal-header">
-    <p>
-      Are you sure you want to unpublish this story? Unpublishing a story will
-      delete any corresponding translation opportunities from the Contributor
-      Dashboard and reject any related pending translation suggestions.
-    </p>
+  <div *ngIf="!isPermanentUnpublishing() && !isTemporaryUnpublishing()">
+    <div class="modal-header">
+      <p>
+        Would you like to unpublish this story permanently or temporarily?
+      </p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary"
+              (click)="cancel()"
+              (keydown.enter)="cancel()">
+              Cancel
+      </button>
+      <button class="btn btn-success e2e-test-close-save-modal-button"
+              (click)="selectUnpublishType('permanent')"
+              (keydown.enter)="selectUnpublishType('permanent')">
+              Permanently
+      </button>
+      <button class="btn btn-success e2e-test-close-save-modal-button"
+              (click)="selectUnpublishType('temporary')"
+              (keydown.enter)="selectUnpublishType('temporary')">
+              Temporarily
+      </button>
+    </div>
   </div>
-  <div class="modal-footer">
-    <button class="btn btn-secondary"
+  <!-- Permanent unpublishing -->
+  <div *ngIf="isPermanentUnpublishing()">
+    <div class="modal-header">
+      <p>Confirm Permanent Unpublishing</p>
+    </div>
+    <div class="modal-body">
+      Unpublishing a story permanently will delete any corresponding translation
+      opportunities from the Contributor Dashboard and reject any related
+      pending translation suggestions.
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary"
             (click)="cancel()"
-            (keydown.enter)="cancel()"
-            type="button">
+            (keydown.enter)="cancel()">
             Cancel
-    </button>
-    <button class="btn btn-success e2e-test-close-save-modal-button"
+      </button>
+      <button class="btn btn-success e2e-test-close-save-modal-button"
             (click)="confirm()"
             (keydown.enter)="confirm()">
-      Unpublish Story
-    </button>
+            Unpublish Permanently
+      </button>
+    </div>
+  </div>
+  <!-- Temporary unpublishing -->
+  <div *ngIf="isTemporaryUnpublishing()">
+    <div class="modal-header">
+      <p>Confirm Temporary Unpublishing</p>
+    </div>
+    <div class="modal-body">
+      Translation opportunities will be retained. Please republish within 24
+      hours to avoid disrupting learners currently engaged with the story.
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary"
+            (click)="cancel()"
+            (keydown.enter)="cancel()">
+            Cancel
+      </button>
+      <button class="btn btn-success e2e-test-close-save-modal-button"
+            (click)="confirm()"
+            (keydown.enter)="confirm()">
+            Unpublish Temporarily
+      </button>
+    </div>
   </div>
 </div>
 

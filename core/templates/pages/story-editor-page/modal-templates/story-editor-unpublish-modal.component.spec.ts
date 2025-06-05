@@ -71,6 +71,22 @@ describe('Story Editor Unpublish Modal Component', () => {
     const dismissSpy = spyOn(ngbActiveModal, 'dismiss').and.callThrough();
     component.cancel();
     expect(dismissSpy).toHaveBeenCalled();
+
+    mockPlatformFeatureService.status.SerialChapterLaunchCurriculumAdminView.isEnabled =
+      false;
+    component.selectUnpublishType('permanent');
+    component.cancel();
+    expect(dismissSpy).toHaveBeenCalled();
+    expect(component.isPermanentUnpublishing()).toBeFalse();
+    expect(component.isTemporaryUnpublishing()).toBeFalse();
+
+    mockPlatformFeatureService.status.SerialChapterLaunchCurriculumAdminView.isEnabled =
+      false;
+    component.selectUnpublishType('temporary');
+    component.cancel();
+    expect(dismissSpy).toHaveBeenCalled();
+    expect(component.isPermanentUnpublishing()).toBeFalse();
+    expect(component.isTemporaryUnpublishing()).toBeFalse();
   });
 
   it('should close by proceeding with unpublishing', () => {
@@ -84,6 +100,30 @@ describe('Story Editor Unpublish Modal Component', () => {
       true;
     component.confirm();
     expect(confirmSpy).toHaveBeenCalledWith(component.unpublishingReason);
+  });
+
+  it('should confirm unpublishing permanently', () => {
+    mockPlatformFeatureService.status.SerialChapterLaunchCurriculumAdminView.isEnabled =
+      false;
+
+    const closeSpy = spyOn(ngbActiveModal, 'close').and.callThrough();
+    component.selectUnpublishType('permanent');
+    component.confirm();
+
+    expect(component.isPermanentUnpublishing()).toBeTrue();
+    expect(closeSpy).toHaveBeenCalledWith(true);
+  });
+
+  it('should confirm unpublishing temporarily', () => {
+    mockPlatformFeatureService.status.SerialChapterLaunchCurriculumAdminView.isEnabled =
+      false;
+
+    const closeSpy = spyOn(ngbActiveModal, 'close').and.callThrough();
+    component.selectUnpublishType('temporary');
+    component.confirm();
+
+    expect(component.isTemporaryUnpublishing()).toBeTrue();
+    expect(closeSpy).toHaveBeenCalledWith(false);
   });
 
   it('should get status of Serial Chapter Launch Feature flag', () => {

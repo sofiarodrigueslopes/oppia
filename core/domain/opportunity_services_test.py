@@ -671,7 +671,7 @@ class OpportunityServicesIntegrationTest(test_utils.GenericTestBase):
         self.add_exploration_0_to_story()
         # Story is already published, so unpublish first.
         topic_services.unpublish_story(
-            self.TOPIC_ID, self.STORY_ID, self.admin_id)
+            self.TOPIC_ID, self.STORY_ID, self.admin_id, True)
         translation_opportunities, _, _ = (
             opportunity_services.get_translation_opportunities(
                 'hi', 'topic', None))
@@ -691,7 +691,7 @@ class OpportunityServicesIntegrationTest(test_utils.GenericTestBase):
         self.add_exploration_0_to_story()
         # Story and topic are already published, so unpublish first.
         topic_services.unpublish_story(
-            self.TOPIC_ID, self.STORY_ID, self.admin_id)
+            self.TOPIC_ID, self.STORY_ID, self.admin_id, True)
         topic_services.unpublish_topic(self.TOPIC_ID, self.admin_id)
         translation_opportunities, _, _ = (
             opportunity_services.get_translation_opportunities(
@@ -713,7 +713,7 @@ class OpportunityServicesIntegrationTest(test_utils.GenericTestBase):
         self.assertEqual(len(translation_opportunities), 1)
 
         topic_services.unpublish_story(
-            self.TOPIC_ID, self.STORY_ID, self.admin_id)
+            self.TOPIC_ID, self.STORY_ID, self.admin_id, True)
 
         translation_opportunities, _, _ = (
             opportunity_services.get_translation_opportunities(
@@ -725,7 +725,7 @@ class OpportunityServicesIntegrationTest(test_utils.GenericTestBase):
         self.create_translation_suggestion_for_exploration_0_and_verify()
 
         topic_services.unpublish_story(
-            self.TOPIC_ID, self.STORY_ID, self.admin_id)
+            self.TOPIC_ID, self.STORY_ID, self.admin_id, True)
 
         suggestion = suggestion_services.get_suggestion_by_id(self.THREAD_ID)
         self.assertEqual(suggestion.status, suggestion_models.STATUS_REJECTED)

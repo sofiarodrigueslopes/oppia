@@ -352,7 +352,7 @@ describe('Story editor state service', () => {
     );
   }));
 
-  it('should be able to publish the story', fakeAsync(() => {
+  it('should be able to publish the story and unpublish permanently', fakeAsync(() => {
     spyOn(
       fakeEditableStoryBackendApiService,
       'changeStoryPublicationStatusAsync'
@@ -374,9 +374,52 @@ describe('Story editor state service', () => {
     var expectedId = 'storyId_0';
     var publishStorySpy =
       fakeEditableStoryBackendApiService.changeStoryPublicationStatusAsync;
-    expect(publishStorySpy).toHaveBeenCalledWith(expectedId, true);
+    expect(publishStorySpy).toHaveBeenCalledWith(expectedId, true, false);
     expect(storyEditorStateService.isStoryPublished()).toBe(true);
     expect(successCallback).toHaveBeenCalled();
+
+    storyEditorStateService.changeStoryPublicationStatus(
+      false,
+      successCallback,
+      true
+    );
+    tick(1000);
+
+    expect(
+      fakeEditableStoryBackendApiService.changeStoryPublicationStatusAsync
+    ).toHaveBeenCalledWith('storyId_0', false, true);
+    expect(storyEditorStateService.isStoryPublished()).toBe(false);
+    expect(successCallback).toHaveBeenCalledTimes(2);
+  }));
+
+  it('should be able to publish the story and unpublish temporarily', fakeAsync(() => {
+    spyOn(
+      fakeEditableStoryBackendApiService,
+      'changeStoryPublicationStatusAsync'
+    ).and.callThrough();
+    const successCallback = jasmine.createSpy('successCallback');
+
+    storyEditorStateService.loadStory('storyId_0');
+    tick(1000);
+
+    expect(storyEditorStateService.isStoryPublished()).toBe(false);
+
+    storyEditorStateService.changeStoryPublicationStatus(true, successCallback);
+    tick(1000);
+    expect(storyEditorStateService.isStoryPublished()).toBe(true);
+
+    storyEditorStateService.changeStoryPublicationStatus(
+      false,
+      successCallback,
+      false
+    );
+    tick(1000);
+
+    expect(
+      fakeEditableStoryBackendApiService.changeStoryPublicationStatusAsync
+    ).toHaveBeenCalledWith('storyId_0', false, false);
+    expect(storyEditorStateService.isStoryPublished()).toBe(false);
+    expect(successCallback).toHaveBeenCalledTimes(2);
   }));
 
   it('should warn user when story is not published', fakeAsync(() => {
@@ -403,7 +446,7 @@ describe('Story editor state service', () => {
     var expectedId = 'storyId_0';
     var publishStorySpy =
       fakeEditableStoryBackendApiService.changeStoryPublicationStatusAsync;
-    expect(publishStorySpy).toHaveBeenCalledWith(expectedId, true);
+    expect(publishStorySpy).toHaveBeenCalledWith(expectedId, true, false);
     expect(storyEditorStateService.isStoryPublished()).toBe(false);
     expect(alertsService.addWarning).toHaveBeenCalledWith(
       'There was an error when publishing/unpublishing the story.'

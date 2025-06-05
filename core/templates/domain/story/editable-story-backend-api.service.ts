@@ -133,6 +133,7 @@ export class EditableStoryBackendApiService {
   private _changeStoryPublicationStatus(
     storyId: string,
     newStoryStatusIsPublic: boolean,
+    isPermanent: boolean,
     successCallback: (value: void) => void,
     errorCallback: (reason: string) => void
   ): void {
@@ -144,6 +145,7 @@ export class EditableStoryBackendApiService {
     );
     const putData = {
       new_story_status_is_public: newStoryStatusIsPublic,
+      is_permanent: isPermanent,
     };
     this.http
       .put(storyPublishUrl, putData)
@@ -273,12 +275,14 @@ export class EditableStoryBackendApiService {
 
   async changeStoryPublicationStatusAsync(
     storyId: string,
-    newStoryStatusIsPublic: boolean
+    newStoryStatusIsPublic: boolean,
+    isPermanent: boolean
   ): Promise<void> {
     return new Promise((resolve, reject) => {
       this._changeStoryPublicationStatus(
         storyId,
         newStoryStatusIsPublic,
+        isPermanent,
         resolve,
         reject
       );

@@ -205,6 +205,7 @@ class StoryPublishHandlerNormalizedPayloadDict(TypedDict):
     """
 
     new_story_status_is_public: bool
+    is_permanent: bool
 
 
 class StoryPublishHandler(
@@ -224,6 +225,11 @@ class StoryPublishHandler(
     HANDLER_ARGS_SCHEMAS = {
         'PUT': {
             'new_story_status_is_public': {
+                'schema': {
+                    'type': 'bool'
+                },
+            },
+            'is_permanent': {
                 'schema': {
                     'type': 'bool'
                 },
@@ -249,7 +255,8 @@ class StoryPublishHandler(
         if new_story_status_is_public:
             topic_services.publish_story(topic_id, story_id, self.user_id)
         else:
-            topic_services.unpublish_story(topic_id, story_id, self.user_id)
+            is_permanent = self.normalized_payload['is_permanent']
+            topic_services.unpublish_story(topic_id, story_id, self.user_id, is_permanent)
 
         self.render_json(self.values)
 
